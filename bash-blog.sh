@@ -50,7 +50,7 @@ function cat_side_bar() {
 
     # list directories
     for dir in "${NESTED[@]}"; do
-        echo   "        <a href=\"$DIR/$dir/index.html\">/$dir</a>" >> $output
+        echo   "        <a href=\"$dir/index.html\">/$dir</a>" >> $output
     done
 
     # list files
@@ -97,7 +97,7 @@ END
 function render_file() {
     local body_html="$(parse_markdown $1)"
     local file_name=$1 # no extension
-    local output=$DIR/"$1.html"
+    local output=$OUTPUT/"$1.html"
     shift # get rid of other args
     cat_start_html $output 
     cat_side_bar $file_name $output
@@ -110,7 +110,7 @@ function render_file() {
 # mainly needed to have a landing page for parent nav
 function render_summary() {
     local file_name="index"
-    local output=$DIR/"$file_name.html"
+    local output=$OUTPUT/"$file_name.html"
 
     cat_start_html $output
     cat_side_bar $file_name $output
@@ -120,6 +120,9 @@ function render_summary() {
 
 # render all markdown in current dir
 function render() {
+    # create output dir
+    mkdir -p $OUTPUT
+
     # find all markdown in current directory
     FILES=()
     while IFS=  read -r -d $'\0'; do
@@ -144,8 +147,8 @@ function render() {
     done
 
     # TODO run in parallel
-    for f in "${NESTED[@]}"; do
-        ./$0 -r -d "$DIR/$f" -s "../$STYLE"
+    for d in "${NESTED[@]}"; do
+        ./$0 -r -d "$DIR/$d" -s "../$STYLE" -o "$OUTPUT/$d"
     done
 }
 
@@ -155,11 +158,12 @@ function usage() {
     Bash Blog
     Generate navigatable HTML from markdown filled directory.
 
-    usage: bash-blog [-d directory] [-s css-file]
+    usage: bash-blog [-d directory] [-s css-file] [-o output]
     
     arguments:
         -d, --dir           the directory to look for markdown (and gen output)
         -h, --help          brings up this message and exits
+        -o, --output        the root output directory. Creates needed directories if they do not exist. Remember the root of this output dir will need a stylesheet.
         -r, --not-root      add flag to prevent the markdown at this level from displaying a link to parent dir. Likely only useful from the script itself
         -s, --style         path to a css file to use a different stylesheet than default
         -v, --verbose       print verbose / debugging info
@@ -184,6 +188,7 @@ function debug() {
 ROOT=true
 DIR=$PWD
 STYLE="style.css"
+OUTPUT=$DIR
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -191,6 +196,10 @@ while [ "$1" != "" ]; do
                             ;;
         -d | --dir)         shift
                             DIR=$1
+                            # only change output if it is the default
+                            if [ $OUTPUT == $PWD ]; then
+                                OUTPUT=$DIR
+                            fi
                             ;;
         -s | --style)       shift
                             STYLE=$1
@@ -199,6 +208,9 @@ while [ "$1" != "" ]; do
                             exit
                             ;;
         -v | --verbose)     export BASH_BLOG_DEBUG=true # want children to debug too
+                            ;;
+        -o | --output)      shift
+                            OUTPUT=$1
                             ;;
         * )                 usage
                             exit
@@ -210,6 +222,7 @@ done
 debug "root dir?\t:$ROOT"
 debug "curr dir\t$DIR"
 debug "style:\t\t$STYLE"
+debug "output dir:\t$OUTPUT"
 debug "---------"
 
 render

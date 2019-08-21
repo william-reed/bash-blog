@@ -13,11 +13,12 @@ in comes a dir of markdown, out goes a navigatable website / blog
     Bash Blog
     Generate navigatable HTML from markdown filled directory.
 
-    usage: bash-blog [-d directory] [-s css-file]
+    usage: bash-blog [-d directory] [-s css-file] [-o output]
 
     arguments:
         -d, --dir           the directory to look for markdown (and gen output)
         -h, --help          brings up this message and exits
+        -o, --output        the root output directory. Creates needed directories if they do not exist. Remember the root of this output dir will need a stylesheet.
         -r, --not-root      add flag to prevent the markdown at this level from displaying a link to parent dir. Likely only useful from the script itself
         -s, --style         path to a css file to use a different stylesheet than default
         -v, --verbose       print verbose / debugging info
